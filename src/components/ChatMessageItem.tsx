@@ -12,6 +12,13 @@ import {
   FileText,
   FileDown,
   CornerDownLeft,
+  Globe,
+  ExternalLink,
+  MapPin,
+  Compass,
+  Sliders,
+  Wand2,
+  Eye,
 } from 'lucide-react';
 import { Message } from '../types';
 import { tts } from '../lib/audio';
@@ -23,6 +30,7 @@ interface ChatMessageItemProps {
   onRetry?: () => void;
   onFeedback?: (rating: 'positive' | 'negative') => void;
   onBranch?: () => void;
+  onEditImage?: (imageUrl: string) => void;
 }
 
 export const ChatMessageItem: React.FC<ChatMessageItemProps> = ({
@@ -31,10 +39,12 @@ export const ChatMessageItem: React.FC<ChatMessageItemProps> = ({
   onRetry,
   onFeedback,
   onBranch,
+  onEditImage,
 }) => {
   const [copied, setCopied] = useState(false);
   const [isPlaying, setIsPlaying] = useState(false);
   const [isGeneratingPdf, setIsGeneratingPdf] = useState(false);
+  const [showPromptDetails, setShowPromptDetails] = useState(false);
 
   const isUser = message.role === 'user';
 
@@ -71,7 +81,7 @@ export const ChatMessageItem: React.FC<ChatMessageItemProps> = ({
     message.content.includes('## ')
   );
 
-  // Helper to render simple structured markdown & code blocks safely
+  // Helper to render simple structured markdown, code blocks & visual badges
   const renderFormattedContent = (content: string) => {
     if (!content) return null;
 
@@ -178,8 +188,43 @@ export const ChatMessageItem: React.FC<ChatMessageItemProps> = ({
     });
   };
 
-  // Helper for bold and inline code
+  // Helper for bold, inline code, and dual-confidence vision badges
   const formatInline = (text: string) => {
+    // Replace visual certainty markers with styled badges
+    if (text.includes('[دڵنیا / Visible]')) {
+      const segs = text.split('[دڵنیا / Visible]');
+      return segs.map((s, i) => (
+        <React.Fragment key={i}>
+          {formatInlineSimple(s)}
+          {i < segs.length - 1 && (
+            <span className="inline-flex items-center gap-1 mx-1 px-2 py-0.5 rounded-full text-[10px] bg-emerald-950/80 text-emerald-300 border border-emerald-700/60 font-medium">
+              <Eye className="w-2.5 h-2.5" />
+              <span>دڵنیا (Visible)</span>
+            </span>
+          )}
+        </React.Fragment>
+      ));
+    }
+
+    if (text.includes('[پێشبینیکراو / Inferred]')) {
+      const segs = text.split('[پێشبینیکراو / Inferred]');
+      return segs.map((s, i) => (
+        <React.Fragment key={i}>
+          {formatInlineSimple(s)}
+          {i < segs.length - 1 && (
+            <span className="inline-flex items-center gap-1 mx-1 px-2 py-0.5 rounded-full text-[10px] bg-amber-950/80 text-amber-300 border border-amber-700/60 font-medium">
+              <Sparkles className="w-2.5 h-2.5" />
+              <span>پێشبینیکراو (Inferred)</span>
+            </span>
+          )}
+        </React.Fragment>
+      ));
+    }
+
+    return formatInlineSimple(text);
+  };
+
+  const formatInlineSimple = (text: string) => {
     // Bold: **word**
     const boldParts = text.split(/(\*\*[^*]+\*\*)/g);
     return boldParts.map((bPart, bIdx) => {
@@ -236,6 +281,12 @@ export const ChatMessageItem: React.FC<ChatMessageItemProps> = ({
                 {message.modelNameBadge}
               </span>
             )}
+            {message.webSearchUsed && (
+              <span className="px-2 py-0.5 rounded-full text-[10px] bg-blue-950/80 text-blue-300 border border-blue-800/60 flex items-center gap-1 font-medium">
+                <Globe className="w-2.5 h-2.5 text-blue-400" />
+                گەڕانی وێب چالاک بوو
+              </span>
+            )}
             {message.isFallback && (
               <span className="px-1.5 py-0.5 rounded text-[10px] bg-amber-950/70 text-amber-300 border border-amber-800/60 flex items-center gap-1">
                 <AlertTriangle className="w-2.5 h-2.5" />
@@ -289,15 +340,128 @@ export const ChatMessageItem: React.FC<ChatMessageItemProps> = ({
           </div>
         )}
 
-        {/* AI Generated Image (if present) */}
+        {/* Location Discovery Card (if message has locationData) */}
+        {message.locationData && (
+          <div className="my-3 p-3.5 rounded-xl bg-slate-950/90 border border-emerald-500/30 space-y-3">
+            <div className="flex items-center justify-between text-xs">
+              <div className="flex items-center gap-1.5 text-emerald-400 font-semibold">
+                <MapPin className="w-4 h-4" />
+                <span>شوێنی دیاریکراو لەسەر نەخشە:</span>
+              </div>
+              <span className="font-mono text-[10px] text-slate-400" dir="ltr">
+                {message.locationData.lat.toFixed(5)}, {message.locationData.lng.toFixed(5)}
+              </span>
+            </div>
+            <div className="text-sm text-slate-200 font-medium">
+              {message.locationData.address}
+            </div>
+
+            {/* Mini Map View */}
+            <div className="rounded-lg overflow-hidden border border-slate-800 aspect-[16/8] relative">
+              <iframe
+                title="Mini Map"
+                width="100%"
+                height="100%"
+                frameBorder="0"
+                scrolling="no"
+                src={`https://www.openstreetmap.org/export/embed.html?bbox=${message.locationData.lng - 0.008}%2C${message.locationData.lat - 0.008}%2C${message.locationData.lng + 0.008}%2C${message.locationData.lat + 0.008}&amp;layer=mapnik&amp;marker=${message.locationData.lat}%2C${message.locationData.lng}`}
+                className="w-full h-full"
+              />
+            </div>
+
+            {/* Nearby places inside location data */}
+            {message.locationData.nearbyPlaces && message.locationData.nearbyPlaces.length > 0 && (
+              <div className="space-y-1.5 pt-1">
+                <span className="text-[11px] font-semibold text-slate-400">نزیکترین شوێنەکان:</span>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-1.5">
+                  {message.locationData.nearbyPlaces.slice(0, 4).map((p) => (
+                    <a
+                      key={p.id}
+                      href={p.mapsUrl}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="p-2 rounded-lg bg-slate-900 border border-slate-800 hover:border-emerald-500/40 text-xs flex items-center justify-between"
+                    >
+                      <span className="truncate text-slate-300">{p.name}</span>
+                      <span className="text-[10px] font-mono text-emerald-400 shrink-0 pr-1">
+                        {p.distanceKm} km
+                      </span>
+                    </a>
+                  ))}
+                </div>
+              </div>
+            )}
+          </div>
+        )}
+
+        {/* AI Generated Image (with Edit action and Prompt Interpretation) */}
         {message.generatedImageUrl && (
-          <div className="my-3 overflow-hidden rounded-xl border border-cyan-500/30 shadow-lg">
-            <img
-              src={message.generatedImageUrl}
-              alt="Generated visual"
-              referrerPolicy="no-referrer"
-              className="w-full max-h-[480px] object-contain bg-slate-950"
-            />
+          <div className="my-3 overflow-hidden rounded-xl border border-cyan-500/30 shadow-lg space-y-2">
+            <div className="relative group/img bg-slate-950 flex items-center justify-center">
+              <img
+                src={message.generatedImageUrl}
+                alt={message.generatedImagePrompt || 'Generated visual'}
+                referrerPolicy="no-referrer"
+                className="w-full max-h-[480px] object-contain"
+              />
+              {/* Quick Image Edit button */}
+              {onEditImage && (
+                <button
+                  onClick={() => onEditImage(message.generatedImageUrl!)}
+                  className="absolute bottom-3 left-3 px-3 py-1.5 rounded-lg bg-slate-900/90 hover:bg-cyan-500 hover:text-slate-950 text-cyan-300 text-xs font-semibold border border-slate-700/80 shadow-md backdrop-blur-sm flex items-center gap-1.5 transition-all"
+                  title="دەستکاریکردنی ئەم وێنەیە"
+                >
+                  <Wand2 className="w-3.5 h-3.5" />
+                  <span>دەستکاریکردنی وێنە (Edit)</span>
+                </button>
+              )}
+            </div>
+
+            {/* Prompt Interpreter Breakdown (if present) */}
+            {message.promptInterpretation && (
+              <div className="p-3 bg-slate-950/80 border-t border-slate-800 text-xs space-y-2">
+                <button
+                  onClick={() => setShowPromptDetails(!showPromptDetails)}
+                  className="w-full flex items-center justify-between text-cyan-400 hover:text-cyan-300 transition-colors"
+                >
+                  <span className="flex items-center gap-1.5 font-semibold text-[11px]">
+                    <Sliders className="w-3 h-3" />
+                    شیکاریی پڕۆمپت و ڕووناکی (Prompt Breakdown)
+                  </span>
+                  <span className="text-[10px] text-slate-400">
+                    {showPromptDetails ? 'داخستن' : 'پیشاندان'}
+                  </span>
+                </button>
+                {showPromptDetails && (
+                  <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 text-[10px] pt-1">
+                    {message.promptInterpretation.subject && (
+                      <div className="p-1.5 rounded bg-slate-900 border border-slate-800">
+                        <span className="text-slate-500 block">تەن:</span>
+                        <span className="text-slate-300 truncate block">{message.promptInterpretation.subject}</span>
+                      </div>
+                    )}
+                    {message.promptInterpretation.lighting && (
+                      <div className="p-1.5 rounded bg-slate-900 border border-slate-800">
+                        <span className="text-slate-500 block">ڕووناکی:</span>
+                        <span className="text-slate-300 truncate block">{message.promptInterpretation.lighting}</span>
+                      </div>
+                    )}
+                    {message.promptInterpretation.camera && (
+                      <div className="p-1.5 rounded bg-slate-900 border border-slate-800">
+                        <span className="text-slate-500 block">کامێرا:</span>
+                        <span className="text-slate-300 truncate block">{message.promptInterpretation.camera}</span>
+                      </div>
+                    )}
+                    {message.promptInterpretation.materials && (
+                      <div className="p-1.5 rounded bg-slate-900 border border-slate-800">
+                        <span className="text-slate-500 block">کەرەستەکان:</span>
+                        <span className="text-slate-300 truncate block">{message.promptInterpretation.materials}</span>
+                      </div>
+                    )}
+                  </div>
+                )}
+              </div>
+            )}
           </div>
         )}
 
@@ -342,18 +506,34 @@ export const ChatMessageItem: React.FC<ChatMessageItemProps> = ({
           </div>
         )}
 
-        {/* Citations / Sources */}
+        {/* Real Grounding Citations / Web Sources Cards */}
         {message.citations && message.citations.length > 0 && (
-          <div className="mt-3 pt-2 border-t border-slate-800 text-xs space-y-1">
-            <div className="font-semibold text-slate-400 flex items-center gap-1">
-              <Sparkles className="w-3 h-3 text-cyan-400" />
-              <span>سەرچاوەکان:</span>
+          <div className="mt-3 pt-3 border-t border-slate-800 text-xs space-y-2">
+            <div className="font-semibold text-slate-300 flex items-center gap-1.5">
+              <Globe className="w-3.5 h-3.5 text-blue-400" />
+              <span>سەرچاوەکانی وێب (Google Search Grounding):</span>
             </div>
-            {message.citations.map((c) => (
-              <div key={c.id} className="text-slate-400 pr-2">
-                • {c.source}: {c.snippet}
-              </div>
-            ))}
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+              {message.citations.map((c) => (
+                <a
+                  key={c.id}
+                  href={c.url}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="p-2.5 rounded-xl bg-slate-950/70 border border-slate-800 hover:border-blue-500/50 hover:bg-slate-900/80 transition-all text-right flex flex-col justify-between group/cite"
+                >
+                  <div className="flex items-center justify-between gap-1 text-[11px] text-blue-300 font-medium">
+                    <span className="truncate">{c.source || c.title}</span>
+                    <ExternalLink className="w-3 h-3 shrink-0 text-slate-500 group-hover/cite:text-blue-400" />
+                  </div>
+                  {c.snippet && (
+                    <p className="text-[10px] text-slate-400 mt-1 line-clamp-2 leading-relaxed">
+                      {c.snippet}
+                    </p>
+                  )}
+                </a>
+              ))}
+            </div>
           </div>
         )}
 

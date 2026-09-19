@@ -10,6 +10,11 @@ import {
   X,
   FileText,
   Image as ImageIcon,
+  Globe,
+  MapPin,
+  Video,
+  FileSearch,
+  BookOpen,
 } from 'lucide-react';
 import { Attachment } from '../types';
 import { stt } from '../lib/audio';
@@ -24,6 +29,10 @@ interface ChatInputBarProps {
   autoMode: boolean;
   onToggleAutoMode: () => void;
   projectName?: string;
+  webSearchActive?: boolean;
+  onToggleWebSearch?: () => void;
+  onOpenLocationModal?: () => void;
+  onOpenImageStudio?: () => void;
 }
 
 export const ChatInputBar: React.FC<ChatInputBarProps> = ({
@@ -35,11 +44,16 @@ export const ChatInputBar: React.FC<ChatInputBarProps> = ({
   autoMode,
   onToggleAutoMode,
   projectName,
+  webSearchActive = false,
+  onToggleWebSearch,
+  onOpenLocationModal,
+  onOpenImageStudio,
 }) => {
   const [input, setInput] = useState('');
   const [attachments, setAttachments] = useState<Attachment[]>([]);
   const [isListening, setIsListening] = useState(false);
   const [showModelPicker, setShowModelPicker] = useState(false);
+  const [isVideoExtracting, setIsVideoExtracting] = useState(false);
 
   const fileInputRef = useRef<HTMLInputElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
@@ -87,11 +101,81 @@ export const ChatInputBar: React.FC<ChatInputBarProps> = ({
     }
   };
 
+  // Video Key Frame Sampler for Universal Understanding
+  const extractVideoFrames = async (file: File) => {
+    setIsVideoExtracting(true);
+    try {
+      const video = document.createElement('video');
+      video.preload = 'metadata';
+      video.muted = true;
+      video.playsInline = true;
+
+      const videoUrl = URL.createObjectURL(file);
+      video.src = videoUrl;
+
+      await new Promise((resolve) => {
+        video.onloadedmetadata = () => resolve(true);
+      });
+
+      const duration = video.duration || 5;
+      const timestamps = [
+        Math.min(1, duration * 0.2),
+        Math.min(duration * 0.5, duration),
+        Math.max(0, duration - 1),
+      ];
+
+      const canvas = document.createElement('canvas');
+      const ctx = canvas.getContext('2d');
+
+      const extractedFrames: Attachment[] = [];
+
+      for (let i = 0; i < timestamps.length; i++) {
+        const t = timestamps[i];
+        video.currentTime = t;
+        await new Promise((resolve) => {
+          video.onseeked = () => resolve(true);
+        });
+
+        canvas.width = Math.min(video.videoWidth || 640, 1280);
+        canvas.height = Math.min(video.videoHeight || 360, 720);
+        if (ctx) {
+          ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+          const frameDataUrl = canvas.toDataURL('image/jpeg', 0.85);
+          const minutes = Math.floor(t / 60);
+          const seconds = Math.floor(t % 60);
+          const timeLabel = `${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`;
+
+          extractedFrames.push({
+            id: `video-frame-${Date.now()}-${i}`,
+            name: `${file.name} [فرەیمی کات: ${timeLabel}]`,
+            type: 'image',
+            size: frameDataUrl.length,
+            mimeType: 'image/jpeg',
+            dataUrl: frameDataUrl,
+          });
+        }
+      }
+
+      setAttachments((prev) => [...prev, ...extractedFrames]);
+      URL.revokeObjectURL(videoUrl);
+    } catch (err) {
+      console.warn('Video frame sampling error:', err);
+    } finally {
+      setIsVideoExtracting(false);
+    }
+  };
+
   const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = e.target.files;
     if (!files || files.length === 0) return;
 
     Array.from(files).forEach((file) => {
+      const isVideo = file.type.startsWith('video/') || file.name.endsWith('.mp4') || file.name.endsWith('.webm');
+      if (isVideo) {
+        extractVideoFrames(file);
+        return;
+      }
+
       const isImage = file.type.startsWith('image/');
       const reader = new FileReader();
 
@@ -114,7 +198,6 @@ export const ChatInputBar: React.FC<ChatInputBarProps> = ({
       if (isImage || file.type.startsWith('text/') || file.name.endsWith('.md') || file.name.endsWith('.txt')) {
         reader.readAsDataURL(file);
       } else {
-        // Handle other file metadata
         setAttachments((prev) => [
           ...prev,
           {
@@ -137,11 +220,13 @@ export const ChatInputBar: React.FC<ChatInputBarProps> = ({
     setAttachments((prev) => prev.filter((a) => a.id !== id));
   };
 
+  const imageCount = attachments.filter((a) => a.type === 'image').length;
+
   return (
     <div className="relative w-full max-w-4xl mx-auto px-3 pb-3 pt-1">
-      {/* Top Model Selector & Project Indicator */}
-      <div className="flex items-center justify-between px-2 mb-2 text-xs">
-        <div className="flex items-center gap-2">
+      {/* Top Model Selector & Badges */}
+      <div className="flex flex-wrap items-center justify-between px-2 mb-2 text-xs gap-2">
+        <div className="flex items-center gap-2 flex-wrap">
           {/* Model badge selector button */}
           <div className="relative">
             <button
@@ -227,19 +312,62 @@ export const ChatInputBar: React.FC<ChatInputBarProps> = ({
             )}
           </div>
 
-          {projectName && (
-            <span className="px-2 py-0.5 rounded-md bg-slate-800/80 text-slate-300 border border-slate-700/60 text-[11px]">
-              پڕۆژە: {projectName}
-            </span>
+          {/* Web Search Grounding Toggle */}
+          {onToggleWebSearch && (
+            <button
+              onClick={onToggleWebSearch}
+              className={`flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] border transition-all ${
+                webSearchActive
+                  ? 'bg-blue-500/20 border-blue-400/60 text-blue-300 shadow-sm shadow-blue-500/20 font-semibold'
+                  : 'bg-slate-900/80 border-slate-700/80 text-slate-400 hover:text-slate-200'
+              }`}
+              title="گەڕانی ڕاستەوخۆ لە گووگڵ و سەرچاوەکانی وێب"
+            >
+              <Globe className="w-3.5 h-3.5" />
+              <span>گەڕانی وێب</span>
+              {webSearchActive && <span className="w-1.5 h-1.5 rounded-full bg-blue-400 animate-ping" />}
+            </button>
+          )}
+
+          {/* Location Discovery Trigger */}
+          {onOpenLocationModal && (
+            <button
+              onClick={onOpenLocationModal}
+              className="flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] bg-slate-900/80 border border-slate-700/80 text-slate-300 hover:text-emerald-300 hover:border-emerald-500/40 transition-all"
+              title="دۆزینەوەی شوێن، ناونیشان و شوێنە نزیکەکان"
+            >
+              <MapPin className="w-3.5 h-3.5 text-emerald-400" />
+              <span>شوێن و نەخشە</span>
+            </button>
+          )}
+
+          {/* Image Studio Trigger */}
+          {onOpenImageStudio && (
+            <button
+              onClick={onOpenImageStudio}
+              className="flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] bg-slate-900/80 border border-slate-700/80 text-slate-300 hover:text-cyan-300 hover:border-cyan-500/40 transition-all"
+              title="ستۆدیۆی داهێنانی وێنە (Image Studio)"
+            >
+              <Sparkles className="w-3.5 h-3.5 text-cyan-400" />
+              <span>داهێنانی وێنە</span>
+            </button>
           )}
         </div>
 
-        {/* Character/Attachment Counter */}
-        {attachments.length > 0 && (
-          <span className="text-cyan-400 text-[11px]">
-            {attachments.length} فایل هاوپێچکراوە
-          </span>
-        )}
+        {/* Dynamic Mode Badges */}
+        <div className="flex items-center gap-2">
+          {imageCount === 2 && (
+            <span className="px-2 py-0.5 rounded-md bg-purple-950/80 border border-purple-800 text-purple-300 text-[10px] flex items-center gap-1">
+              <span>دۆخی بەراوردی دوو وێنە (Dual Image Comparison)</span>
+            </span>
+          )}
+          {isVideoExtracting && (
+            <span className="text-cyan-400 text-[11px] flex items-center gap-1 animate-pulse">
+              <Video className="w-3.5 h-3.5" />
+              <span>دەرهێنانی فرەیمەکانی ڤیدیۆ...</span>
+            </span>
+          )}
+        </div>
       </div>
 
       {/* Main Input Container */}
@@ -284,13 +412,14 @@ export const ChatInputBar: React.FC<ChatInputBarProps> = ({
 
         {/* Input Controls Bar */}
         <div className="flex items-center justify-between px-3 pb-2.5 pt-1 border-t border-slate-800/40">
-          {/* Right Action Icons: Attachment & Mic */}
+          {/* Right Action Icons: Attachment, Mic, Quick Modes */}
           <div className="flex items-center gap-1">
             {/* File Upload Input */}
             <input
               ref={fileInputRef}
               type="file"
               multiple
+              accept="image/*,video/*,text/*,.pdf,.md,.txt,.json,.csv"
               onChange={handleFileUpload}
               className="hidden"
             />
@@ -298,7 +427,7 @@ export const ChatInputBar: React.FC<ChatInputBarProps> = ({
               id="btn-attach-file"
               onClick={() => fileInputRef.current?.click()}
               className="p-2 rounded-xl text-slate-400 hover:text-cyan-300 hover:bg-slate-800/80 transition-colors"
-              title="هاوپێچکردنی فایل، وێنە، بەڵگەنامە"
+              title="هاوپێچکردنی فایل، وێنە، ڤیدیۆ، بەڵگەنامە"
             >
               <Paperclip className="w-4 h-4" />
             </button>
@@ -315,6 +444,38 @@ export const ChatInputBar: React.FC<ChatInputBarProps> = ({
               title={isListening ? 'ڕاگرتنی مایکرۆفۆن' : 'قسەکردن بە دەنگ'}
             >
               {isListening ? <MicOff className="w-4 h-4" /> : <Mic className="w-4 h-4" />}
+            </button>
+
+            {/* Problem Analysis Quick Prompt */}
+            <button
+              type="button"
+              onClick={() => {
+                setInput((prev) =>
+                  prev ? `${prev}\n\nتکایە شیکاریی وردی ئەم کێشەیە بکە بەپێی ٦ هەنگاوەکە (پێناسە، بەڵگە، هۆکار، پشکنین، چارەسەر، ڕێگری):` : 'تکایە شیکاریی وردی ئەم کێشەیە بکە بەپێی ٦ هەنگاوەکە (پێناسە، بەڵگە، هۆکار، پشکنین، چارەسەر، ڕێگری): '
+                );
+                textareaRef.current?.focus();
+              }}
+              className="hidden sm:flex items-center gap-1 px-2 py-1 rounded-lg text-[10px] text-slate-400 hover:text-cyan-300 hover:bg-slate-800/60"
+              title="دۆخی شیکاریی کێشە (Problem Analysis)"
+            >
+              <FileSearch className="w-3 h-3" />
+              <span>شیکاریی کێشە</span>
+            </button>
+
+            {/* Detailed Info Quick Prompt */}
+            <button
+              type="button"
+              onClick={() => {
+                setInput((prev) =>
+                  prev ? `${prev}\n\nزانیاریی وردم بدە بەپێی ٩ خاڵەکە لەسەر:` : 'زانیاریی وردم بدە بەپێی ٩ خاڵەکە لەسەر: '
+                );
+                textareaRef.current?.focus();
+              }}
+              className="hidden sm:flex items-center gap-1 px-2 py-1 rounded-lg text-[10px] text-slate-400 hover:text-cyan-300 hover:bg-slate-800/60"
+              title="دۆخی زانیاریی ورد (Detailed Info Mode)"
+            >
+              <BookOpen className="w-3 h-3" />
+              <span>زانیاریی ورد</span>
             </button>
           </div>
 

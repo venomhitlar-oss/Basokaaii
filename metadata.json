@@ -2,7 +2,9 @@
   "name": "Remix Basoka AI",
   "description": "پلاتفۆرمی ژیری دەستکردی کەسی باسۆکا بە زمانی کوردی سۆرانی بۆ یەک سەرۆک",
   "requestFramePermissions": [
-    "microphone"
+    "microphone",
+    "geolocation",
+    "camera"
   ],
   "majorCapabilities": [
     "MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"

@@ -5,28 +5,66 @@ export interface Citation {
   source: string;
   snippet: string;
   url?: string;
+  title?: string;
+}
+
+export interface PlaceItem {
+  id: string;
+  name: string;
+  category?: string;
+  distanceKm: number;
+  lat: number;
+  lng: number;
+  address?: string;
+  mapsUrl: string;
+}
+
+export interface LocationData {
+  lat: number;
+  lng: number;
+  accuracy?: number;
+  address: string;
+  city?: string;
+  country?: string;
+  nearbyPlaces?: PlaceItem[];
+}
+
+export interface ImagePromptInterpretation {
+  subject?: string;
+  environment?: string;
+  composition?: string;
+  camera?: string;
+  lighting?: string;
+  materials?: string;
+  colorPalette?: string;
+  mood?: string;
+  style?: string;
+  aspectRatio?: string;
+  details?: string;
+  finalOptimizedPrompt?: string;
 }
 
 export interface Attachment {
   id: string;
   name: string;
-  type: string; // 'image', 'document', 'audio', 'code', 'data'
+  type: 'image' | 'video' | 'audio' | 'pdf' | 'document' | 'other';
   size: number;
   mimeType: string;
-  dataUrl?: string; // base64
+  dataUrl?: string;
+  videoKeyframes?: string[];
   extractedText?: string;
-}
-
-export interface KurdishCorrection {
-  original: string;
-  improved: string;
-  reason: string;
 }
 
 export interface MessageFeedback {
   rating: 'positive' | 'negative';
   comment?: string;
   timestamp: string;
+}
+
+export interface KurdishCorrection {
+  original: string;
+  correction: string;
+  explanation?: string;
 }
 
 export interface Message {
@@ -42,7 +80,17 @@ export interface Message {
   fallbackReason?: string;
   attachments?: Attachment[];
   citations?: Citation[];
+  webSearchUsed?: boolean;
+  webSearchQueries?: string[];
+  locationData?: LocationData;
+  promptInterpretation?: ImagePromptInterpretation;
   generatedImageUrl?: string;
+  generatedImagePrompt?: string;
+  isImageEditing?: boolean;
+  videoAnalysisMeta?: {
+    framesCount: number;
+    duration?: number;
+  };
   feedback?: MessageFeedback;
   kurdishQualityChecked?: boolean;
   kurdishCorrections?: KurdishCorrection[];

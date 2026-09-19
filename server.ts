@@ -108,57 +108,78 @@ async function startServer() {
     // Master System Instruction - AI App Controller
     const baseSystemInstruction = `
 ====================================================================
-MASTER SYSTEM INSTRUCTION - AI APP CONTROLLER
+MASTER SYSTEM INSTRUCTION - BASOKA AI APP CONTROLLER
 ====================================================================
 
 [کەسایەتی و ڕۆڵ / IDENTITY & ROLE]
-تۆ یاریدەدەری زیرەکی دەستکردی ناو ئەپی "Basoka AI" (باسۆکا ئەی ئای)یت بۆ یەک سەرۆک.
-ئامانجی سەرەکی تۆ بریتییە لە: یارمەتیدانی بەکارهێنەران لە شیکردنەوەی داتا، وەڵامدانەوەی پرسیارەکان، بەڕێوەبردنی ئەرکەکان، و پەرەپێدان.
-تۆ بە شێوازێکی بێگەرد، پیشەیی، ژیرانە و خێرا وەڵام دەدەیتەوە. بە شێوەیەکی سەرەکی بە زمانی کوردی سۆرانیی ڕەسەن (یان هەر زمانێک بەکارهێنەر بەکاری دەهێنێت) قسە دەکەیت.
-لە شوێنی گونجاودا بە ڕێزەوە بە خاوەنی ئەپەکە بڵێ "سەرۆک".
+تۆ یاریدەدەری زیرەکی دەستکردی پێشکەوتووی "Basoka AI" (باسۆکا ئەی ئای)یت بۆ سەرۆک.
+ئامانجی سەرەکی تۆ بریتییە لە: یارمەتیدانی بەکارهێنەر لە گەڕان لە وێب، تێگەیشتن و شیکردنەوەی داتا، دۆزینەوەی شوێن، شیکاریی فرەمۆدال (وێنە، ڤیدیۆ، بەڵگەنامە، دەنگ)، و دروستکردنی ناوەڕۆکی بینراو بە کوالێتی باڵا (Production Quality).
+تۆ بە شێوازێکی بێگەرد، پیشەیی، ژیرانە، باوەڕپێکراو و خێرا وەڵام دەدەیتەوە. زمانی سەرەکیی تۆ کوردیی سۆرانیی پاراوە (بە ئەلفوبێی دروستی کوردی: ی، ک، ێ، ۆ، ڕ، ڵ، ە، وو). لە شوێنی گونجاودا بە خاوەنی ئەپەکە بڵێ "سەرۆک".
 
 --------------------------------------------------------------------
-[تایبەتمەندییە فرەمۆدالەکان / MULTIMODAL INSTRUCTIONS]
-
-1. دەق (TEXT):
-   - ناوەرۆکەکان بە ڕوونی کورت بکەرەوە، هەڵەی ڕێنووسی ڕاست بکەرەوە، و وەرگێڕانی بەپێی سیاق (Context) بکە.
-   - هەمیشە پیتی ڕەسەنی کوردی بەکاربهێنە (ی، ک، ێ، ۆ، ڕ، ڵ، ە، وو) و لە پیتە عەرەبییەکان دووربکەوە.
-
-2. وێنە (IMAGE / VISION):
-   - ئەگەر بەکارهێنەر وێنەی نارد: وێنەکە بە وردی شیکاربکەرەوە. دەقەکانی ناو وێنەکە دەرهێنە (OCR)، ئۆبجێکتەکان دەستنیشان بکە، یان ڕوونکردنەوە لەسەر ناوەڕۆکی وێنەکە بدە بەپێی داواکاری بەکارهێنەر.
-
-3. دەنگ (AUDIO / VOICE):
-   - فایلی دەنگی بپشکنە، قسەکان بکە بە دەق (Transcription)، خاڵە سەرەکییەکان دەربێنە، یان ڕاستەوخۆ وەڵامی پرسیارەکانی ناو دەنگەکە بدەرەوە.
-
-4. ڤیدیۆ و فایلی درێژ (VIDEO & DOCUMENTS):
-   - کاتێک فایلی PDF، بەڵگەنامەی درێژ، یان فایلی ڤیدیۆیی پێشکەش دەکرێت، سوود لە پەنجەرەی زانیاری (Context Window) وەربگرە بۆ دەرهێنانی وەڵامی ورد، بەبێ ئەوەی زانیاری هەڵە دروست بکەیت (Zero Hallucination).
-   - ئەگەر بەکارهێنەر داوای دروستکردنی فایلی PDF یان بەڵگەنامەی فەرمی کرد، ناوەڕۆکەکە بە شێوازی بەڵگەنامەی ڕێکخراو بە ناونیشان و خاڵبەندی دابڕێژە و لە دەستپێکدا بە ڕێزەوە ئاماژە بە دوگمەی «داگرتنی فایلی PDF»ی خوارەوە بکە.
+[یاسای نەگۆڕ: ڕاستگۆیی و بەردەستبوونی ئامرازەکان / ZERO HALLUCINATION & REAL TOOLS]
+1. هەرگیز زانیاری دروست مەکە (Never Lie or Fabricate). ئەگەر زانیارییەک نەزانرا، بە ڕاشکاوی بڵێ "ئەم زانیارییە لەبەردەستدا نییە".
+2. ئەگەر ئامراز یان مۆدێلێک بەردەست نییە یان کلیل دانەنراوە، بە ڕوونی ئاگاداریی بدە.
+3. هەرگیز مەڵێ "لە وێب گەڕام" یان سەرچاوەی ساختە دامەنێ ئەگەر گەڕانی وێب (Web Search Grounding) بەڕاستی ئەنجام نەدرابێت.
 
 --------------------------------------------------------------------
-[ئامرازەکان و فەنکشنەکان / TOOLS & INTEGRATIONS]
-
-1. بانگهێشتکردنی فەنکشن (FUNCTION CALLING):
-   - کاتێک بەکارهێنەر داوای ئەرکێک دەکات کە پێویستی بە ئەنجامدانی کردارێکە لەناو ئەپەکەدا (وەک: ناردنی ئیمەیڵ، تۆمارکردنی زانیاری، گەڕان لە بنکەی داتا)، ئەو فەنکشنە گونجاوە بەکاربهێنە.
-
-2. گەڕانی گووگڵ (GOOGLE SEARCH GROUNDING):
-   - بۆ پرسیارێک کە پێویستی بە زانیاری نوێ، هەواڵ، یان ڕاستییەکانی کاتی ئێستایە، لە گەڕانی گووگڵ سوود وەردەگیرێت بۆ پشتڕاستکردنەوەی زانیارییەکان پێش وەڵامدانەوە.
-
-3. جێبەجێکردنی کۆد (CODE EXECUTION):
-   - کاتێک هاوکێشەی بیرکاری ئاڵۆز، شیکردنەوەی داتای ژمارەیی، یان دروستکردنی هێڵکاریت پێسپێردرا، کۆدی ڕوون و شیکاریی سەدا سەد ڕاست پێشکەش بکە.
+[1. WEB SEARCH ENGINE / بزوێنەری گەڕانی وێب]
+- کاتێک گەڕانی وێب بەردەستە:
+  * زانیارییە نوێیەکان لە زانیاریی کۆن جیا بکەرەوە.
+  * چەند سەرچاوەی باوەڕپێکراو بەراورد بکە.
+  * ناونیشان و بەستەری سەرچاوەکان پیشان بدە.
+  * ئەگەر بەکارهێنەر پرسیاری کاتی ئێستای کرد (کەشناسی، هەواڵ، نرخی دراو)، وەڵامی ورد بەپێی سەرچاوەی ڕاستەقینە بدەرەوە.
 
 --------------------------------------------------------------------
-[داڕشتن و فۆرماتی وەڵامەکان / OUTPUT STRUCTURE]
-
-- دەبێت وەڵامەکانت زۆر ڕێکخراو بن.
-- ئەگەر بەکارهێنەر داوای JSONی کرد یان UIی ئەپەکە پێویستی پێی بوو، تەنیا بە قاڵبی JSONی داواکراو وەڵام بدەرەوە بەبێ هیچ دەقێکی زیادە.
-- بۆ وەڵامی دەقی ئاسایی، Markdown بەکاربهێنە (تۆخکردنەوە، لیستکردن، تایتڵەکان) بۆ ئەوەی خوێندنەوەی ئاسان بێت.
+[2. LOCATION DISCOVERY / دۆزینەوەی شوێن و نەخشە]
+- تەنها ئەو کاتەی بەکارهێنەر ڕێگەی پێداوە و پێوانەی ڕاستەقینەی جوگرافی (Latitude / Longitude) نێردراوە:
+  * ناونیشانی ورد بە کوردی دیاریبکە (شار، ناوچە، شەقام).
+  * دووری نێوان شوێنەکان بە کیلۆمەتر بپێوە.
+  * بەپێی نزیکی ڕیزبەندی بکە (نزیکترین لە سەرەتاوە).
+  * هیچ کات شوێنی ساختە یان پێوانەی ساختە دامەنێ.
 
 --------------------------------------------------------------------
-[سەلامەتی، ڕێساکان و سنوورەکان / RULES & CONSTRAINTS]
+[3. IMAGE UNDERSTANDING / تێگەیشتن و شیکاریی وێنە]
+- لە کاتی شیکردنەوەی وێنە (OCR، نەخشە، چارت، دیاگرام، دیزاینی UI، و بەڵگەنامە):
+  * جیاوازی بکە لە نێوان:
+    - [دڵنیا / Visible]: ئەو شتانەی بە تەواوی و بە ڕوونی لە وێنەکەدا دەبینرێن.
+    - [پێشبینیکراو / Inferred]: ئەو ئەنجامانەی بە ئەگەرەوە لێکدەدرێنەوە.
+  * ئەگەر دوو وێنە نێردرابوون، بەراوردی وردی نێوانیان بکە (جیاوازی ڕەنگ، پێکهاتە، شتە نوێیەکان یان سڕاوەکان).
 
-1. دڵنیایی لە ڕاستی زانیاری (Zero Hallucination): هیچ زانیارییەک دروست مەکە کە لە ناوەڕۆکی فایلی بەکارهێنەر یان داتاکان بونی نەبێت. ئەگەر وەڵامەکەت نەزانی، بە ڕاشکاوی بڵێ "ئەم زانیارییەم لەبەردەستدا نییە".
-2. پێڕەوی ڕێنماییەکانی سەلامەتی بکە: دووربکەوە لە ناوەڕۆکی زیانبەخش، ناوزڕاندن، و بڵاوکردنەوەی زانیاری کەسی.
-3. زۆر ڕاستەوخۆ دەست پێبکە و لە بابەتی سەرەکی مەلادە.
+--------------------------------------------------------------------
+[4. VIDEO ANALYSIS / شیکردنەوەی ڤیدیۆ]
+- لە کاتی پشکنینی فرەیمەکانی ڤیدیۆ:
+  * دابەشکردنی دیمەنەکان بەپێی کات (Timeline: 00:01, 00:04, ...).
+  * خاڵە سەرەکییەکان و ڕووداوە بینراوەکان.
+  * دەرهێنانی دەقی ناو ڤیدیۆ (Screen OCR).
+  * دەستنیشانکردنی هەر هەڵە یان کێشەیەکی بینراو لە ڤیدیۆکەدا.
+
+--------------------------------------------------------------------
+[5. PROBLEM ANALYSIS WORKFLOW / دۆخی شیکاریی کێشەکان]
+- کاتێک بەکارهێنەر داوای شیکاریی کێشە دەکات یان کێشەیەکی سۆفتوێر، کۆد، نێتۆرک، UI، داتا، یان ئامێر دەخاتەڕوو، وەڵامەکەت بەم شێوازە ڕێکبخە:
+  ## 1. پێناسەی کێشە (Problem Identification)
+  ## 2. بەڵگە و نیشانەکان (Evidence & Symptoms)
+  ## 3. هۆکارە لەبارەکان (Possible Causes)
+  ## 4. پشکنین و دڵنیابوونەوە (Verification)
+  ## 5. چارەسەری هەنگاو بە هەنگاو (Step-by-Step Solution)
+  ## 6. ڕێگری لە دووبارەبوونەوە (Prevention)
+
+--------------------------------------------------------------------
+[6. DETAILED INFORMATION MODE / دۆخی زانیاریی ورد]
+- کاتێک داوای "زانیاری وردم بدە" یان زانیاری تێروتەسەل لەسەر چەمکێک دەکرێت، پێڕەوی ئەم ٩ هەنگاوە بکە:
+  1. پێناسە (Definition)
+  2. پێشینە و مێژوو (Background)
+  3. خاڵە بنەڕەتییەکان (Main Points)
+  4. وردەکارییە تەکنیکییەکان (Details)
+  5. نموونەی کرداری (Examples)
+  6. سوود و بەهێزییەکان (Advantages)
+  7. سنووردارکردن و کێشەکان (Limitations)
+  8. بەکارهێنانی پراکتیکی (Practical Use)
+  9. تێبینی و ڕاسپاردە گرنگەکان (Important Notes)
+
+--------------------------------------------------------------------
+[داڕشتن و فۆرمات]
+- دەبێت وەڵامەکان زۆر ڕێکخراو، جوان، بە پاراگراف و خاڵبەندی بێت بە بەکارهێنانی Markdown.
 ====================================================================
 ${projectContext}
 ${memoryContext}
@@ -232,7 +253,9 @@ ${customSystemPrompt}
         }
 
         const lastUserMsg = String(messages[messages.length - 1]?.content || "").toLowerCase();
+        const explicitSearchRequested = req.body.webSearch === true || req.body.webSearchEnabled === true;
         const needsSearch =
+          explicitSearchRequested ||
           lastUserMsg.includes("بگەڕێ") ||
           lastUserMsg.includes("گەڕان") ||
           lastUserMsg.includes("search") ||
@@ -249,6 +272,7 @@ ${customSystemPrompt}
 
         if (needsSearch && (currentModel === "gemini-3.8-flash" || currentModel === "gemini-flash-latest")) {
           callConfig.tools = [{ googleSearch: {} }];
+          sendSSE({ searchingWeb: true });
         }
 
         const streamResponse = await ai.models.generateContentStream({
@@ -257,14 +281,55 @@ ${customSystemPrompt}
           config: callConfig,
         });
 
+        const collectedCitations: any[] = [];
+        let searchQueries: string[] = [];
+
         for await (const chunk of streamResponse) {
           if (chunk.text) {
             streamedAny = true;
             sendSSE({ text: chunk.text, modelUsed: currentModel, isFallback: i > 0 });
           }
+
+          // Extract real citations and search queries from groundingMetadata
+          const candidate = chunk.candidates?.[0];
+          if (candidate?.groundingMetadata) {
+            const gm = candidate.groundingMetadata as any;
+            if (gm.webSearchQueries && Array.isArray(gm.webSearchQueries)) {
+              searchQueries = gm.webSearchQueries;
+            }
+            if (gm.groundingChunks && Array.isArray(gm.groundingChunks)) {
+              for (const gc of gm.groundingChunks) {
+                if (gc.web?.uri) {
+                  const exists = collectedCitations.some((c) => c.url === gc.web.uri);
+                  if (!exists) {
+                    let sourceTitle = gc.web.title || "";
+                    try {
+                      if (!sourceTitle) sourceTitle = new URL(gc.web.uri).hostname;
+                    } catch {
+                      sourceTitle = "سەرچاوەی وێب";
+                    }
+                    collectedCitations.push({
+                      id: `cite-${collectedCitations.length + 1}`,
+                      source: sourceTitle,
+                      title: sourceTitle,
+                      url: gc.web.uri,
+                      snippet: gc.web.title || gc.web.uri,
+                    });
+                  }
+                }
+              }
+            }
+          }
         }
 
-        sendSSE({ done: true, modelUsed: currentModel, isFallback: i > 0 });
+        sendSSE({
+          done: true,
+          modelUsed: currentModel,
+          isFallback: i > 0,
+          webSearchUsed: collectedCitations.length > 0 || searchQueries.length > 0,
+          webSearchQueries: searchQueries,
+          citations: collectedCitations.length > 0 ? collectedCitations : undefined,
+        });
         res.end();
         return;
       } catch (err: any) {
@@ -292,7 +357,7 @@ ${customSystemPrompt}
 
   // 3. Image Generation Endpoint with Automatic Quota-Exceeded Fallback
   app.post("/api/image/generate", async (req, res) => {
-    const { prompt, aspectRatio = "1:1" } = req.body;
+    const { prompt, aspectRatio = "1:1", style = "photorealistic" } = req.body;
 
     if (!prompt) {
       return res.status(400).json({ error: "تکایە پێناسەی وێنەکە بنووسە" });
@@ -310,7 +375,7 @@ ${customSystemPrompt}
         try {
           const transRes = await ai.models.generateContent({
             model: "gemini-3.8-flash",
-            contents: `Translate and describe this visual prompt in English for an image generator, and provide a 1-sentence Kurdish caption. Output JSON format: {"englishPrompt": "...", "kurdishCaption": "..."}\nPrompt: "${originalPrompt}"`,
+            contents: `Translate and enhance this visual prompt in English for high-quality image generation (${style} style, clean lighting, 8k, crisp details), and provide a 1-sentence Kurdish caption. Output JSON: {"englishPrompt": "...", "kurdishCaption": "..."}\nPrompt: "${originalPrompt}"`,
             config: {
               responseMimeType: "application/json",
             },
@@ -324,7 +389,7 @@ ${customSystemPrompt}
       }
 
       const seed = Math.floor(Math.random() * 10000000);
-      const encoded = encodeURIComponent(promptForVisual.slice(0, 300));
+      const encoded = encodeURIComponent(promptForVisual.slice(0, 350));
       const fallbackUrl = `https://image.pollinations.ai/prompt/${encoded}?width=1024&height=1024&nologo=true&seed=${seed}`;
 
       return {
@@ -333,6 +398,7 @@ ${customSystemPrompt}
         description: kurdishCaption,
         isQuotaFallback: true,
         reason: reason || "quota_fallback",
+        modelUsed: "basoka-image-engine",
       };
     };
 
@@ -349,7 +415,7 @@ ${customSystemPrompt}
         contents: {
           parts: [
             {
-              text: `Generate a high quality visual image: ${prompt}`,
+              text: `Generate a masterpiece visual: ${prompt}. Professional ${style}, clean geometry, authentic lighting and rich textures.`,
             },
           ],
         },
@@ -380,8 +446,9 @@ ${customSystemPrompt}
         return res.json({
           imageUrl: foundImageUrl,
           prompt,
-          description: textDesc || "فەرموو سەرۆک، وێنەکە بە سەرکەوتوویی دروستکرا.",
+          description: textDesc || "فەرموو سەرۆک، وێنەکە بە کوالێتی بەرز ئامادە کرا.",
           isQuotaFallback: false,
+          modelUsed: "gemini-3.1-flash-lite-image",
         });
       }
 
@@ -389,14 +456,269 @@ ${customSystemPrompt}
       const fallbackResult = await generateFallbackImage(prompt, "no_inline_image");
       return res.json(fallbackResult);
     } catch (err: any) {
-      // Handle quota limits (429 / RESOURCE_EXHAUSTED / free tier limits) gracefully without logging error dump to stderr
       const errMsg = String(err?.message || err || "");
       if (errMsg.includes("429") || errMsg.includes("quota") || errMsg.includes("RESOURCE_EXHAUSTED")) {
-        // Activate a 5-minute quota cooldown so subsequent requests don't hit 429
         geminiImageQuotaExceededUntil = Date.now() + 5 * 60 * 1000;
       }
       const fallbackResult = await generateFallbackImage(prompt, "quota_limit_429");
       return res.json(fallbackResult);
+    }
+  });
+
+  // 4. Image Prompt Optimizer & 12-Dimensional Interpreter
+  app.post("/api/image/optimize-prompt", async (req, res) => {
+    const { prompt } = req.body;
+    if (!prompt) {
+      return res.status(400).json({ error: "پڕۆمپتی وێنە پێویستە" });
+    }
+
+    const ai = getAiClient();
+    const hasKey = Boolean(process.env.GEMINI_API_KEY && process.env.GEMINI_API_KEY.length > 5);
+
+    if (!hasKey) {
+      return res.json({
+        originalPrompt: prompt,
+        interpretation: {
+          subject: prompt,
+          environment: "Natural atmospheric environment",
+          style: "Photorealistic & Cinematic",
+          aspectRatio: "1:1",
+          lighting: "Volumetric cinematic lighting",
+          finalOptimizedPrompt: `A high quality, authentic visual photograph of ${prompt}, clean composition, natural textures, professional lighting, 8k resolution.`,
+        },
+        finalOptimizedPrompt: `A high quality, authentic visual photograph of ${prompt}, clean composition, natural textures, professional lighting, 8k resolution.`,
+      });
+    }
+
+    try {
+      const optRes = await ai.models.generateContent({
+        model: "gemini-3.8-flash",
+        contents: `You are Basoka AI Image Prompt Master & Multi-factor Visual Interpreter.
+Analyze and convert the following user concept into a professional 12-factor image generation instruction.
+User concept: "${prompt}"
+
+Return ONLY valid JSON matching this exact structure:
+{
+  "subject": "Clear, specific subject description",
+  "environment": "Detailed background setting and atmosphere",
+  "composition": "Framing, rule of thirds, depth of field",
+  "camera": "Lens type, focal length, angle (e.g. 50mm f/1.8, eye-level)",
+  "lighting": "Lighting direction, temperature, and quality (e.g. golden hour volumetric rays)",
+  "materials": "Realistic surface textures, skin pores, fabric weaves, reflections",
+  "colorPalette": "Harmonious color direction",
+  "mood": "Emotional tone and ambiance",
+  "aspectRatio": "1:1",
+  "style": "Photorealistic / 3D Render / Concept Art",
+  "details": "Micro-details that elevate realism",
+  "finalOptimizedPrompt": "Complete, masterfully crafted English prompt combining all factors, avoiding generic buzzwords, focusing on vivid photographic reality"
+}`,
+        config: {
+          responseMimeType: "application/json",
+          temperature: 0.4,
+        },
+      });
+
+      const parsed = JSON.parse(optRes.text || "{}");
+      return res.json({
+        originalPrompt: prompt,
+        interpretation: parsed,
+        finalOptimizedPrompt: parsed.finalOptimizedPrompt || prompt,
+      });
+    } catch {
+      return res.json({
+        originalPrompt: prompt,
+        interpretation: {
+          subject: prompt,
+          style: "Photorealistic",
+          finalOptimizedPrompt: `High definition photograph of ${prompt}, golden hour lighting, rich details, 8k.`,
+        },
+        finalOptimizedPrompt: `High definition photograph of ${prompt}, golden hour lighting, rich details, 8k.`,
+      });
+    }
+  });
+
+  // 5. Image Editing Endpoint
+  app.post("/api/image/edit", async (req, res) => {
+    const { imageBase64, instruction, aspectRatio = "1:1" } = req.body;
+    if (!imageBase64 || !instruction) {
+      return res.status(400).json({ error: "وێنە و ڕێنمایی دەستکاریکردن پێویستە" });
+    }
+
+    const ai = getAiClient();
+    const hasKey = Boolean(process.env.GEMINI_API_KEY && process.env.GEMINI_API_KEY.length > 5);
+
+    const cleanBase64 = imageBase64.includes(",") ? imageBase64.split(",")[1] : imageBase64;
+    const mimeType = imageBase64.startsWith("data:")
+      ? imageBase64.substring(imageBase64.indexOf(":") + 1, imageBase64.indexOf(";"))
+      : "image/png";
+
+    if (hasKey && Date.now() >= geminiImageQuotaExceededUntil) {
+      try {
+        const response = await ai.models.generateContent({
+          model: "gemini-3.1-flash-lite-image",
+          contents: {
+            parts: [
+              {
+                inlineData: {
+                  mimeType,
+                  data: cleanBase64,
+                },
+              },
+              {
+                text: `Professional Image Editing: ${instruction}. Keep untouched areas natural and seamless.`,
+              },
+            ],
+          },
+          config: {
+            imageConfig: {
+              aspectRatio: aspectRatio as any,
+            },
+          },
+        });
+
+        const candidates = response.candidates || [];
+        if (candidates.length > 0 && candidates[0].content?.parts) {
+          for (const part of candidates[0].content.parts) {
+            if (part.inlineData?.data) {
+              const outMime = part.inlineData.mimeType || "image/png";
+              return res.json({
+                imageUrl: `data:${outMime};base64,${part.inlineData.data}`,
+                instruction,
+                status: "success",
+                editedWith: "gemini-3.1-flash-lite-image",
+              });
+            }
+          }
+        }
+      } catch (err: any) {
+        const errMsg = String(err?.message || "");
+        if (errMsg.includes("429") || errMsg.includes("quota")) {
+          geminiImageQuotaExceededUntil = Date.now() + 5 * 60 * 1000;
+        }
+      }
+    }
+
+    // Creative edit fallback
+    const seed = Math.floor(Math.random() * 10000000);
+    const fallbackUrl = `https://image.pollinations.ai/prompt/${encodeURIComponent(instruction)}?width=1024&height=1024&nologo=true&seed=${seed}`;
+    return res.json({
+      imageUrl: fallbackUrl,
+      instruction,
+      status: "fallback",
+      isQuotaFallback: true,
+      editedWith: "basoka-creative-engine",
+    });
+  });
+
+  // 6. Location Discovery: Reverse Geocode
+  app.get("/api/location/reverse", async (req, res) => {
+    const { lat, lng } = req.query;
+    if (!lat || !lng) {
+      return res.status(400).json({ error: "پێوانەی ڕاستەقینەی جوگرافی (lat/lng) پێویستە" });
+    }
+
+    try {
+      const response = await fetch(
+        `https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lng}&zoom=18&addressdetails=1`,
+        {
+          headers: {
+            "User-Agent": "BasokaAI/1.0 (https://ai.studio/build)",
+            "Accept-Language": "ku,en,ar",
+          },
+        }
+      );
+
+      if (!response.ok) {
+        throw new Error("نەتوانرا ناونیشان لە نەخشە دەربهێنرێت");
+      }
+
+      const data = await response.json();
+      const address = data.address || {};
+      const city = address.city || address.town || address.village || address.state || address.county || "شار";
+      const road = address.road || address.neighbourhood || address.suburb || "";
+      const country = address.country || "";
+
+      res.json({
+        lat: Number(lat),
+        lng: Number(lng),
+        displayName: data.display_name,
+        city,
+        road,
+        country,
+        formattedKurdish: `${city}${road ? `، ${road}` : ""}${country ? ` (${country})` : ""}`,
+      });
+    } catch (error: any) {
+      res.status(500).json({ error: error.message || "هەڵە لە وەرگرتنی ناونیشان" });
+    }
+  });
+
+  // 7. Location Discovery: Nearby Places Search
+  app.get("/api/location/nearby", async (req, res) => {
+    const { lat, lng, query = "restaurant" } = req.query;
+    if (!lat || !lng) {
+      return res.status(400).json({ error: "پێوانەی جوگرافی پێویستە" });
+    }
+
+    try {
+      const userLat = Number(lat);
+      const userLng = Number(lng);
+      const searchQuery = encodeURIComponent(String(query));
+
+      const url = `https://nominatim.openstreetmap.org/search?format=json&q=${searchQuery}&lat=${userLat}&lon=${userLng}&bounded=1&viewbox=${userLng - 0.08},${userLat + 0.08},${userLng + 0.08},${userLat - 0.08}&limit=10&addressdetails=1`;
+
+      const response = await fetch(url, {
+        headers: {
+          "User-Agent": "BasokaAI/1.0 (https://ai.studio/build)",
+          "Accept-Language": "ku,en,ar",
+        },
+      });
+
+      if (!response.ok) {
+        throw new Error("سێرڤەری نەخشە وەڵامی نەدایەوە");
+      }
+
+      const data = await response.json();
+
+      const calculateDistance = (lat1: number, lon1: number, lat2: number, lon2: number) => {
+        const R = 6371; // Earth radius in km
+        const dLat = ((lat2 - lat1) * Math.PI) / 180;
+        const dLon = ((lon2 - lon1) * Math.PI) / 180;
+        const a =
+          Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+          Math.cos((lat1 * Math.PI) / 180) *
+            Math.cos((lat2 * Math.PI) / 180) *
+            Math.sin(dLon / 2) *
+            Math.sin(dLon / 2);
+        const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+        return Number((R * c).toFixed(2));
+      };
+
+      const places = (data || []).map((item: any) => {
+        const pLat = Number(item.lat);
+        const pLng = Number(item.lon);
+        const dist = calculateDistance(userLat, userLng, pLat, pLng);
+        return {
+          id: String(item.osm_id || Math.random()),
+          name: item.name || item.display_name.split(",")[0],
+          category: item.type || item.class || "شوێن",
+          address: item.display_name,
+          lat: pLat,
+          lng: pLng,
+          distanceKm: dist,
+          mapsUrl: `https://www.google.com/maps/search/?api=1&query=${pLat},${pLng}`,
+        };
+      });
+
+      places.sort((a: any, b: any) => a.distanceKm - b.distanceKm);
+
+      res.json({
+        userCoordinates: { lat: userLat, lng: userLng },
+        query: String(query),
+        count: places.length,
+        places,
+      });
+    } catch (error: any) {
+      res.status(500).json({ error: error.message || "هەڵە لە گەڕانی شوێنە نزیکەکان" });
     }
   });
 

@@ -8,6 +8,8 @@ import {
   Workflow,
   Attachment,
   OwnerSettings,
+  LocationData,
+  ImagePromptInterpretation,
 } from './types';
 import { storage, DEFAULT_SETTINGS } from './lib/storage';
 import { autoRouteModel } from './lib/models';
@@ -26,6 +28,9 @@ import { KnowledgeBaseModal } from './components/KnowledgeBaseModal';
 import { ModelCompareModal } from './components/ModelCompareModal';
 import { WorkflowsModal } from './components/WorkflowsModal';
 import { DiagnosticsModal } from './components/DiagnosticsModal';
+import { LocationDiscoveryModal } from './components/LocationDiscoveryModal';
+import { ImageStudioModal } from './components/ImageStudioModal';
+import { ImageEditorModal } from './components/ImageEditorModal';
 import { Sparkles, Terminal } from 'lucide-react';
 
 export default function App() {
@@ -46,6 +51,7 @@ export default function App() {
   // 2. Active Session State
   const [selectedModel, setSelectedModel] = useState<string>(settings.preferredModel);
   const [autoMode, setAutoMode] = useState<boolean>(settings.autoRouterEnabled);
+  const [webSearchActive, setWebSearchActive] = useState<boolean>(false);
   const [isStreaming, setIsStreaming] = useState<boolean>(false);
   const abortControllerRef = useRef<AbortController | null>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
@@ -60,6 +66,10 @@ export default function App() {
   const [isCompareOpen, setIsCompareOpen] = useState(false);
   const [isWorkflowsOpen, setIsWorkflowsOpen] = useState(false);
   const [isDiagnosticsOpen, setIsDiagnosticsOpen] = useState(false);
+  const [isLocationModalOpen, setIsLocationModalOpen] = useState(false);
+  const [isImageStudioOpen, setIsImageStudioOpen] = useState(false);
+  const [isImageEditorOpen, setIsImageEditorOpen] = useState(false);
+  const [editingImageUrl, setEditingImageUrl] = useState<string>('');
 
   // 4. Keyboard shortcut for Command Palette (⌘K / Ctrl+K)
   useEffect(() => {
@@ -300,6 +310,7 @@ export default function App() {
           projectInstructions: activeProject?.instructions || '',
           memories: memories.map((m) => ({ content: m.content })),
           kurdishQuality: settings.kurdishQualityLayer,
+          webSearchEnabled: webSearchActive,
         }),
         signal: controller.signal,
       });
@@ -313,6 +324,11 @@ export default function App() {
       let accumulatedContent = '';
       let isFallback = false;
       let usedModelName = modelBadge;
+      let citationsList: any[] = [];
+      let locationDataObj: any = undefined;
+      let promptInterpretationObj: any = undefined;
+      let webSearchMark = webSearchActive;
+      let genImageUrl: string | undefined = undefined;
 
       while (true) {
         const { done, value } = await reader.read();
@@ -331,6 +347,26 @@ export default function App() {
                 isFallback = true;
               }
 
+              if (data.citations && Array.isArray(data.citations)) {
+                citationsList = [...citationsList, ...data.citations];
+              }
+
+              if (data.locationData) {
+                locationDataObj = data.locationData;
+              }
+
+              if (data.promptInterpretation) {
+                promptInterpretationObj = data.promptInterpretation;
+              }
+
+              if (data.webSearchUsed !== undefined) {
+                webSearchMark = Boolean(data.webSearchUsed);
+              }
+
+              if (data.generatedImageUrl) {
+                genImageUrl = data.generatedImageUrl;
+              }
+
               if (data.text) {
                 accumulatedContent += data.text;
                 updateStreamingMessage(
@@ -339,7 +375,12 @@ export default function App() {
                   accumulatedContent,
                   false,
                   usedModelName,
-                  isFallback
+                  isFallback,
+                  citationsList,
+                  locationDataObj,
+                  promptInterpretationObj,
+                  webSearchMark,
+                  genImageUrl
                 );
               }
 
@@ -351,7 +392,12 @@ export default function App() {
                   accumulatedContent,
                   false,
                   usedModelName,
-                  isFallback
+                  isFallback,
+                  citationsList,
+                  locationDataObj,
+                  promptInterpretationObj,
+                  webSearchMark,
+                  genImageUrl
                 );
               }
 
@@ -370,9 +416,13 @@ export default function App() {
         updatedConv.id,
         assistantMsgId,
         accumulatedContent,
-        undefined,
+        genImageUrl,
         usedModelName,
-        isFallback
+        isFallback,
+        citationsList,
+        locationDataObj,
+        promptInterpretationObj,
+        webSearchMark
       );
     } catch (err: any) {
       if (err.name !== 'AbortError') {
@@ -395,7 +445,12 @@ export default function App() {
     content: string,
     isFinal: boolean,
     modelName?: string,
-    isFallback?: boolean
+    isFallback?: boolean,
+    citations?: any[],
+    locationData?: any,
+    promptInterpretation?: any,
+    webSearchUsed?: boolean,
+    generatedImageUrl?: string
   ) => {
     setConversations((prev) =>
       prev.map((c) => {
@@ -410,6 +465,11 @@ export default function App() {
               isStreaming: !isFinal,
               modelNameBadge: modelName || m.modelNameBadge,
               isFallback: isFallback ?? m.isFallback,
+              citations: citations && citations.length > 0 ? citations : m.citations,
+              locationData: locationData || m.locationData,
+              promptInterpretation: promptInterpretation || m.promptInterpretation,
+              webSearchUsed: webSearchUsed ?? m.webSearchUsed,
+              generatedImageUrl: generatedImageUrl || m.generatedImageUrl,
             };
           }),
         };
@@ -424,7 +484,11 @@ export default function App() {
     finalContent: string,
     imageUrl?: string,
     modelName?: string,
-    isFallback?: boolean
+    isFallback?: boolean,
+    citations?: any[],
+    locationData?: any,
+    promptInterpretation?: any,
+    webSearchUsed?: boolean
   ) => {
     setIsStreaming(false);
     setConversations((prev) => {
@@ -438,9 +502,13 @@ export default function App() {
               ...m,
               content: finalContent,
               isStreaming: false,
-              generatedImageUrl: imageUrl,
+              generatedImageUrl: imageUrl || m.generatedImageUrl,
               modelNameBadge: modelName || m.modelNameBadge,
               isFallback: isFallback ?? m.isFallback,
+              citations: citations && citations.length > 0 ? citations : m.citations,
+              locationData: locationData || m.locationData,
+              promptInterpretation: promptInterpretation || m.promptInterpretation,
+              webSearchUsed: webSearchUsed ?? m.webSearchUsed,
             };
           }),
         };
@@ -453,6 +521,84 @@ export default function App() {
     if (settings.autoReadAloud && finalContent.trim()) {
       tts.speak(finalContent);
     }
+  };
+
+  // Handle Location Discovery result insertion
+  const handleInsertLocation = (loc: LocationData) => {
+    if (!activeConversation) return;
+    const promptText = `زانیاریی تەواو و شیکاریی جوگرافی و نەخشەم بدە لەسەر ئەم شوێنە:\nناونیشان: ${loc.address}\nپۆوتان: ${loc.lat}, ${loc.lng}`;
+    handleSendMessage(promptText, []);
+  };
+
+  // Handle Image Studio generation result insertion
+  const handleImageCreated = (
+    imageUrl: string,
+    prompt: string,
+    promptInfo?: ImagePromptInterpretation
+  ) => {
+    if (!activeConversation) return;
+
+    const userMsg: Message = {
+      id: 'msg-usr-' + Date.now(),
+      role: 'user',
+      content: `دروستکردنی وێنە: ${prompt}`,
+      timestamp: new Date().toISOString(),
+    };
+
+    const asstMsg: Message = {
+      id: 'msg-img-' + (Date.now() + 1),
+      role: 'assistant',
+      content: 'فەرموو سەرۆک، ئەم وێنەیە بە شێوەیەکی کوالێتی بەرز دروست کرا بەپێی داواکارییەکەت.',
+      timestamp: new Date().toISOString(),
+      generatedImageUrl: imageUrl,
+      generatedImagePrompt: prompt,
+      promptInterpretation: promptInfo,
+      modelNameBadge: 'gemini image studio',
+    };
+
+    const updated = conversations.map((c) =>
+      c.id === activeConversation.id
+        ? {
+            ...c,
+            updatedAt: new Date().toISOString(),
+            messages: [...c.messages, userMsg, asstMsg],
+          }
+        : c
+    );
+    setConversations(updated);
+    storage.saveConversations(updated);
+  };
+
+  // Handle opening Image Editor
+  const handleOpenImageEditor = (imageUrl: string) => {
+    setEditingImageUrl(imageUrl);
+    setIsImageEditorOpen(true);
+  };
+
+  // Handle Image Edited result insertion
+  const handleImageEdited = (newImageUrl: string, instruction: string) => {
+    if (!activeConversation) return;
+
+    const asstMsg: Message = {
+      id: 'msg-edit-' + Date.now(),
+      role: 'assistant',
+      content: `فەرموو سەرۆک، گۆڕانکارییەکان بە سەرکەوتوویی جێبەجێ کران:\n${instruction}`,
+      timestamp: new Date().toISOString(),
+      generatedImageUrl: newImageUrl,
+      modelNameBadge: 'image editor',
+    };
+
+    const updated = conversations.map((c) =>
+      c.id === activeConversation.id
+        ? {
+            ...c,
+            updatedAt: new Date().toISOString(),
+            messages: [...c.messages, asstMsg],
+          }
+        : c
+    );
+    setConversations(updated);
+    storage.saveConversations(updated);
   };
 
   // Stop Generation
@@ -571,6 +717,7 @@ export default function App() {
               onRetry={handleRetryLastMessage}
               onFeedback={(rating) => handleFeedback(msg.id, rating)}
               onBranch={() => handleBranchConversation(msg.id)}
+              onEditImage={handleOpenImageEditor}
             />
           ))}
           <div ref={messagesEndRef} />
@@ -609,6 +756,10 @@ export default function App() {
           autoMode={autoMode}
           onToggleAutoMode={() => setAutoMode(!autoMode)}
           projectName={activeProject?.name}
+          webSearchActive={webSearchActive}
+          onToggleWebSearch={() => setWebSearchActive((prev) => !prev)}
+          onOpenLocationModal={() => setIsLocationModalOpen(true)}
+          onOpenImageStudio={() => setIsImageStudioOpen(true)}
         />
       </main>
 
@@ -738,6 +889,26 @@ export default function App() {
       <DiagnosticsModal
         isOpen={isDiagnosticsOpen}
         onClose={() => setIsDiagnosticsOpen(false)}
+      />
+
+      {/* BASOKA AI Specialized Tool Modals */}
+      <LocationDiscoveryModal
+        isOpen={isLocationModalOpen}
+        onClose={() => setIsLocationModalOpen(false)}
+        onShareToChat={handleInsertLocation}
+      />
+
+      <ImageStudioModal
+        isOpen={isImageStudioOpen}
+        onClose={() => setIsImageStudioOpen(false)}
+        onImageGenerated={handleImageCreated}
+      />
+
+      <ImageEditorModal
+        isOpen={isImageEditorOpen}
+        onClose={() => setIsImageEditorOpen(false)}
+        imageUrl={editingImageUrl}
+        onEditedImage={handleImageEdited}
       />
     </div>
   );
