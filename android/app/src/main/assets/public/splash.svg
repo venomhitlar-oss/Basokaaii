@@ -1,0 +1,37 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1080 1920" width="1080" height="1920">
+  <defs>
+    <linearGradient id="splash-bg" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#020617"/>
+      <stop offset="60%" stop-color="#0b1329"/>
+      <stop offset="100%" stop-color="#0284c7"/>
+    </linearGradient>
+    <linearGradient id="splash-glow" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#38bdf8"/>
+      <stop offset="100%" stop-color="#06b6d4"/>
+    </linearGradient>
+  </defs>
+
+  <!-- Background -->
+  <rect width="1080" height="1920" fill="url(#splash-bg)"/>
+
+  <!-- Centered Branding -->
+  <g transform="translate(540, 860)">
+    <!-- Lightning core -->
+    <path d="M 40 -180 L -100 30 L 10 30 L -30 220 L 120 0 L 0 0 Z" 
+          fill="url(#splash-glow)" 
+          stroke="#e0f2fe" 
+          stroke-width="8" 
+          stroke-linejoin="round" />
+    
+    <!-- Title -->
+    <text y="320" font-family="'Vazirmatn', system-ui, sans-serif" font-size="64" font-weight="900" fill="#f8fafc" text-anchor="middle">
+      باسۆکا
+    </text>
+    <text y="380" font-family="system-ui, sans-serif" font-size="28" font-weight="700" letter-spacing="8" fill="#38bdf8" text-anchor="middle">
+      BASOKA AI
+    </text>
+    <text y="440" font-family="'Vazirmatn', system-ui, sans-serif" font-size="24" font-weight="500" fill="#94a3b8" text-anchor="middle">
+      سیستەمی ژیری دەستکردی کوردی
+    </text>
+  </g>
+</svg>
